@@ -5,4 +5,4 @@ Currently wip
 
 # HOW ? 
 
-kafka-offset-monitor will query kafka for offset for a group and calculate offset lag. The lag is added to a prometheus gauge and exposed. 
+kafka-offset-monitor will query kafka consumer offset for a group and calculate offset lag. The lag is added to a prometheus gauge and exposed. 
