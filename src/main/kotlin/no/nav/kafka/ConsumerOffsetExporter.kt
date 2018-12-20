@@ -1,4 +1,3 @@
-package no.nav.kafka
 
 import io.ktor.application.call
 import io.ktor.application.install
@@ -16,6 +15,7 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import mu.KotlinLogging
+import no.nav.kafka.Environment
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -63,7 +63,7 @@ class ConsumerOffsetExporter(environment: Environment) {
                 val currentOffset = offset.offset()
                 val lag = getLogEndOffset(topic) - currentOffset
                 lagOffset.labels(group, topic.partition().toString(), topic.topic()).set(lag.toDouble())
-                LOGGER.debug("Lag $lag for topic ${topic.topic()} for partition ${topic.partition()}, current offset is $currentOffset")
+                LOGGER.debug("Consumer lag is -> $lag for topic ${topic.topic()} for partition ${topic.partition()}, current offset is $currentOffset")
             }
         }
     }
@@ -84,7 +84,7 @@ class ConsumerOffsetExporter(environment: Environment) {
         Runtime.getRuntime().addShutdownHook(Thread {
             timerTask.cancel()
         })
-        embeddedServer(Netty, httpPort) {
+        val app = embeddedServer(Netty, httpPort) {
             install(ContentNegotiation) {
                 gson {
                     setPrettyPrinting()
@@ -105,6 +105,11 @@ class ConsumerOffsetExporter(environment: Environment) {
                 }
             }
         }.start(wait = true)
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            app.stop(3, 5, TimeUnit.SECONDS)
+        })
+
     }
 
     private fun getLogEndOffset(topicPartition: TopicPartition): Long {
