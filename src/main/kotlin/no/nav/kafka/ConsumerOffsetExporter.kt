@@ -1,3 +1,4 @@
+package no.nav.kafka
 
 import io.ktor.application.call
 import io.ktor.application.install
@@ -15,7 +16,6 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import mu.KotlinLogging
-import no.nav.kafka.Environment
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -31,10 +31,10 @@ class ConsumerOffsetExporter(environment: Environment) {
     private val collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
     private val consumer: KafkaConsumer<String, String>
     private val client: AdminClient
-    private val httpPort: Int = environment.httpPort ?: 8089
+    private val httpPort: Int = 8080
     private val consumerGroups: String = environment.consumerGroups
 
-    private val lagOffset: Gauge = Gauge.build()
+    private val offsetLagGauge: Gauge = Gauge.build()
         .namespace(environment.namespace)
         .name("consumer_offset_lag")
         .help("Offset lag of a topic/partition")
@@ -45,6 +45,12 @@ class ConsumerOffsetExporter(environment: Environment) {
         DefaultExports.initialize()
         consumer = createNewConsumer(environment)
         client = createAdminClient(environment)
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            LOGGER.info("Closing the application...")
+            consumer.close()
+            LOGGER.info("done!")
+        })
     }
 
     companion object {
@@ -58,12 +64,17 @@ class ConsumerOffsetExporter(environment: Environment) {
     private fun kafkaOffsetScraper() {
         consumerGroups.split(",").forEach { group ->
             val consumerGroupOffsets = client.listConsumerGroupOffsets(group)
-            val topicAndPartition = consumerGroupOffsets.partitionsToOffsetAndMetadata().get()
-            topicAndPartition.forEach { topic, offset ->
-                val currentOffset = offset.offset()
-                val lag = getLogEndOffset(topic) - currentOffset
-                lagOffset.labels(group, topic.partition().toString(), topic.topic()).set(lag.toDouble())
-                LOGGER.debug("Consumer lag is -> $lag for topic ${topic.topic()} for partition ${topic.partition()}, current offset is $currentOffset")
+            consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
+                topicPartitionsOffsets?.forEach { topicPartition, offset ->
+                    val currentOffset = offset.offset()
+                    val lag = getLogEndOffset(topicPartition) - currentOffset
+                    offsetLagGauge.labels(group, topicPartition.partition().toString(), topicPartition.topic())
+                        .set(lag.toDouble())
+                    LOGGER.debug("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset")
+                }
+                throwable?.apply {
+                    LOGGER.error(throwable) { "Failed to get offset data from consumer group $group" }
+                }
             }
         }
     }
@@ -75,15 +86,13 @@ class ConsumerOffsetExporter(environment: Environment) {
         return AdminClient.create(props)
     }
 
-    private fun start() {
+    fun start() {
         LOGGER.info { "STARTING" }
         val timer = Timer("offsetChecker", true)
         val timerTask = timer.scheduleAtFixedRate(TimeUnit.SECONDS.toMillis(5), TimeUnit.SECONDS.toMillis(10)) {
             kafkaOffsetScraper()
         }
-        Runtime.getRuntime().addShutdownHook(Thread {
-            timerTask.cancel()
-        })
+
         val app = embeddedServer(Netty, httpPort) {
             install(ContentNegotiation) {
                 gson {
@@ -109,7 +118,9 @@ class ConsumerOffsetExporter(environment: Environment) {
         Runtime.getRuntime().addShutdownHook(Thread {
             app.stop(3, 5, TimeUnit.SECONDS)
         })
-
+        Runtime.getRuntime().addShutdownHook(Thread {
+            timerTask.cancel()
+        })
     }
 
     private fun getLogEndOffset(topicPartition: TopicPartition): Long {

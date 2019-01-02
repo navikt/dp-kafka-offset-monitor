@@ -1,9 +1,11 @@
-
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") version "1.3.10"
     id("com.diffplug.gradle.spotless") version "3.13.0"
     id("application")
+    id("com.github.johnrengelman.shadow") version "4.0.3"
 }
 
 val prometheus_version = "0.5.0"
@@ -11,6 +13,7 @@ val ktor_version = "1.0.0"
 val kotlin_logging_version = "1.4.9"
 val kafka_version = "2.0.1"
 val log4j2_version = "2.11.1"
+val junit = "5.3.2"
 
 repositories {
     mavenCentral()
@@ -36,22 +39,19 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4j2_version")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version")
 
-    testImplementation ("org.spekframework.spek2:spek-dsl-jvm:2.0.0-alpha.1") {
-        exclude(group = "org.jetbrains.kotlin")
-    }
-    testImplementation ("org.spekframework.spek2:spek-runner-junit5:2.0.0-alpha.1") {
-        exclude(group = "org.junit.platform")
-        exclude(group = "org.jetbrains.kotlin")
-    }
-
-    // spek requires kotlin-reflect
-    testRuntimeOnly (kotlin("reflect"))
     testImplementation("no.nav:kafka-embedded-env:2.0.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit")
 }
 
 application {
     applicationName = "kafka-offset-monitor"
-    mainClassName = "no.nav.kafka.PrometheusConsumerOffsetMonitor"
+    mainClassName = "no.nav.kafka.ConsumerOffsetExporter"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 spotless {
@@ -75,4 +75,14 @@ val klintIdea by tasks.creating(JavaExec::class) {
     classpath = ktlint
     main = "com.github.shyiko.ktlint.Main"
     args = listOf("--apply-to-idea-project", "-y")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        showExceptions = true
+        showStackTraces = true
+        exceptionFormat = TestExceptionFormat.FULL
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+    }
 }
