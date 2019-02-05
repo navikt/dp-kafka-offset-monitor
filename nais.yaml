@@ -1,0 +1,37 @@
+# Example https://github.com/nais/naiserator/blob/master/examples/nais-max.yaml
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: dp-kafka-offset-monitor
+  namespace: default
+  labels:
+    team: teamdagpenger
+  annotations:
+    zone: fss
+spec:
+  image: repo.adeo.no:5443/dp-kafka-offset-monitor:latest
+  port: 8080
+  team: teamdagpenger
+  liveness:
+    path: isAlive
+  readiness:
+    path: isReady
+  replicas:
+    min: 1
+    max: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 384Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  prometheus:
+    enabled: true
+    path: /metrics
+  secrets: true
+  env:
+    - name: PROMETHEUS_NAMESPACE
+      value: dp
+    - name: CONSUMER_GROUPS
+      value: dagpenger-joark-mottak
