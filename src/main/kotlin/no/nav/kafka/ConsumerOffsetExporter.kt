@@ -64,6 +64,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     }
 
     private fun kafkaOffsetScraper() {
+        LOGGER.info("Monitoring groups ${consumerGroups.split(",").joinToString { "\"$it\"" }}")
         consumerGroups.split(",").forEach { group ->
             val consumerGroupOffsets = client.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
@@ -72,7 +73,7 @@ class ConsumerOffsetExporter(environment: Environment) {
                     val lag = getLogEndOffset(topicPartition) - currentOffset
                     offsetLagGauge.labels(group, topicPartition.partition().toString(), topicPartition.topic())
                         .set(lag.toDouble())
-                    LOGGER.debug("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset")
+                    LOGGER.info("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset")
                 }
                 throwable?.apply {
                     LOGGER.error(throwable) { "Failed to get offset data from consumer group $group" }
