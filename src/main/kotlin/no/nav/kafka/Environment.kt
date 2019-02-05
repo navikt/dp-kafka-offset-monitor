@@ -3,8 +3,11 @@ package no.nav.kafka
 data class Environment(
     val bootstrapServersUrl: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
     val namespace: String = getEnvVar("PROMETHEUS_NAMESPACE"),
-    val consumerGroups: String = getEnvVar("CONSUMER_GROUPS")
+    val consumerGroups: String = getEnvVar("CONSUMER_GROUPS"),
+    val username: String = getEnvVar("USERNAME"),
+    val password: String = getEnvVar("PASSWORD")
 ) {
+
     init {
         if (namespace.isBlank()) throw IllegalArgumentException("PROMETHEUS_NAMESPACE cannot be blank. ")
     }

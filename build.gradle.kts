@@ -2,14 +2,14 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("jvm") version "1.3.10"
-    id("com.diffplug.gradle.spotless") version "3.13.0"
+    kotlin("jvm") version "1.3.20"
+    id("com.diffplug.gradle.spotless") version "3.17.0"
     id("application")
     id("com.github.johnrengelman.shadow") version "4.0.3"
 }
 
-val prometheus_version = "0.5.0"
-val ktor_version = "1.0.0"
+val prometheus_version = "0.6.0"
+val ktor_version = "1.1.2"
 val kotlin_logging_version = "1.4.9"
 val kafka_version = "2.0.1"
 val log4j2_version = "2.11.1"

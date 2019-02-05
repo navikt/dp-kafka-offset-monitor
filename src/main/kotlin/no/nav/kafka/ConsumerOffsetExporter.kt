@@ -16,10 +16,14 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import mu.KotlinLogging
+import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.config.SaslConfigs
+import org.apache.kafka.common.config.SslConfigs
+import java.io.File
 import java.util.Properties
 import java.util.Timer
 import java.util.concurrent.TimeUnit
@@ -29,8 +33,9 @@ private val LOGGER = KotlinLogging.logger {}
 
 class ConsumerOffsetExporter(environment: Environment) {
     private val collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
-    private val consumer: KafkaConsumer<String, String>
-    private val client: AdminClient
+    private val kafkaCredential: KafkaCredential = KafkaCredential(environment.username, environment.password)
+    private val consumer: KafkaConsumer<String, String> = createNewConsumer(environment)
+    private val client: AdminClient = createAdminClient(environment)
     private val httpPort: Int = 8080
     private val consumerGroups: String = environment.consumerGroups
 
@@ -43,9 +48,6 @@ class ConsumerOffsetExporter(environment: Environment) {
 
     init {
         DefaultExports.initialize()
-        consumer = createNewConsumer(environment)
-        client = createAdminClient(environment)
-
         Runtime.getRuntime().addShutdownHook(Thread {
             LOGGER.info("Closing the application...")
             consumer.close()
@@ -83,6 +85,7 @@ class ConsumerOffsetExporter(environment: Environment) {
         val props = Properties().apply {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.bootstrapServersUrl)
         }
+        props.putAll(credentialProperties())
         return AdminClient.create(props)
     }
 
@@ -141,6 +144,39 @@ class ConsumerOffsetExporter(environment: Environment) {
             "org.apache.kafka.common.serialization.StringDeserializer"
         properties[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] =
             "org.apache.kafka.common.serialization.StringDeserializer"
+        properties.putAll(credentialProperties())
         return KafkaConsumer(properties)
+    }
+
+    private fun credentialProperties(): Properties {
+        return Properties().apply {
+            kafkaCredential.let { credential ->
+                LOGGER.info { "Using user name ${credential.username} to authenticate against Kafka brokers " }
+                put(SaslConfigs.SASL_MECHANISM, "PLAIN")
+                put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
+                put(
+                    SaslConfigs.SASL_JAAS_CONFIG,
+                    "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${credential.username}\" password=\"${credential.password}\";"
+                )
+
+                val trustStoreLocation = System.getenv("NAV_TRUSTSTORE_PATH")
+                trustStoreLocation?.let {
+                    try {
+                        put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
+                        put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, File(it).absolutePath)
+                        put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, System.getenv("NAV_TRUSTSTORE_PASSWORD"))
+                        LOGGER.info { "Configured '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
+                    } catch (e: Exception) {
+                        LOGGER.error { "Failed to set '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
+                    }
+                }
+            }
+        }
+    }
+
+    data class KafkaCredential(val username: String, val password: String) {
+        override fun toString(): String {
+            return "username '$username' password '*******'"
+        }
     }
 }
