@@ -92,7 +92,7 @@ class ConsumerOffsetExporter(environment: Environment) {
 
     fun start() {
         LOGGER.info { "STARTING" }
-        val timer = Timer("offsetChecker", true)
+        val timer = Timer("offset-checker-task", true)
         val timerTask = timer.scheduleAtFixedRate(TimeUnit.SECONDS.toMillis(5), TimeUnit.SECONDS.toMillis(10)) {
             kafkaOffsetScraper()
         }
