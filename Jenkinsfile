@@ -56,12 +56,12 @@ pipeline {
         }
 
         sh label: 'Prepare service contract', script: """
-            sed 's/latest/${VERSION}/' nais.yaml | tee nais.yaml
+            sed 's/latest/${VERSION}/' nais.yaml | tee nais-deployed.yaml
         """
 
         sh label: 'Deploy to non-production', script: """
           kubectl config use-context dev-${env.ZONE}
-          kubectl apply -n ${env.NAMESPACE} -f nais.yaml --wait
+          kubectl apply -n ${env.NAMESPACE} -f nais-deployed.yaml --wait
           kubectl rollout status -w deployment/${APPLICATION_NAME}
         """
       }

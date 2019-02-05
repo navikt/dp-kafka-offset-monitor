@@ -53,6 +53,7 @@ class ConsumerOffsetExporter(environment: Environment) {
             consumer.close()
             LOGGER.info("done!")
         })
+        LOGGER.info("Monitoring groups ${consumerGroups.split(",").joinToString { "\"$it\"" }}")
     }
 
     companion object {
@@ -64,7 +65,6 @@ class ConsumerOffsetExporter(environment: Environment) {
     }
 
     private fun kafkaOffsetScraper() {
-        LOGGER.info("Monitoring groups ${consumerGroups.split(",").joinToString { "\"$it\"" }}")
         consumerGroups.split(",").forEach { group ->
             val consumerGroupOffsets = client.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
