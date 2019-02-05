@@ -53,7 +53,7 @@ class ConsumerOffsetExporter(environment: Environment) {
             consumer.close()
             LOGGER.info("done!")
         })
-        LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"" }}")
+        LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { " \"$it\" " }}")
     }
 
     companion object {
