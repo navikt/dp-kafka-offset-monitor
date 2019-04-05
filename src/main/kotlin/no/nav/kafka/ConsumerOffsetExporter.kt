@@ -61,7 +61,6 @@ class ConsumerOffsetExporter(environment: Environment) {
             }
         }
 
-
         LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
     }
 
