@@ -6,9 +6,6 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="org.apache.kafka" level="debug">
-            <AppenderRef ref="Console"/>
-        </Logger>
         <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>

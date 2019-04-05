@@ -34,4 +34,4 @@ spec:
     - name: PROMETHEUS_NAMESPACE
       value: dp
     - name: CONSUMER_GROUPS
-      value: dagpenger-joark-mottak
+      value: dagpenger-joark-mottak,dagpenger-inntekt-datasamler,dagpenger-regel-minsteinntekt,dagpenger-regel-periode,dagpenger-regel-sats,dagpenger-regel-grunnlag,dp-regel-api
