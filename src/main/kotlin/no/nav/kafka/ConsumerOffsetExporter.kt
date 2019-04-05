@@ -69,8 +69,6 @@ class ConsumerOffsetExporter(environment: Environment) {
             val consumerGroupOffsets = client.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
 
-                LOGGER.info { " Offets $topicPartitionsOffsets " }
-
                 topicPartitionsOffsets?.forEach { topicPartition, offset ->
                     val currentOffset = offset.offset()
                     val lag = getLogEndOffset(topicPartition) - currentOffset
