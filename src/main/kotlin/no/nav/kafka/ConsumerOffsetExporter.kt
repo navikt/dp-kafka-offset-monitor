@@ -35,7 +35,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     private val collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
     private val kafkaCredential: KafkaCredential = KafkaCredential(environment.username, environment.password)
     private val consumer: KafkaConsumer<String, String> = createNewConsumer(environment)
-    private val client: AdminClient = createAdminClient(environment)
+    private val adminClient: AdminClient = createAdminClient(environment)
     private val httpPort: Int = 8080
     private val consumerGroups: String = environment.consumerGroups
 
@@ -53,7 +53,9 @@ class ConsumerOffsetExporter(environment: Environment) {
             consumer.close()
             LOGGER.info("done!")
         })
-        LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { " \"$it\" " }}")
+
+        LOGGER.info { "CONSUMER GROUPTS ${adminClient.listConsumerGroups()}" }
+        LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
     }
 
     companion object {
@@ -66,7 +68,7 @@ class ConsumerOffsetExporter(environment: Environment) {
 
     private fun kafkaOffsetScraper() {
         consumerGroups.split(",").forEach { group ->
-            val consumerGroupOffsets = client.listConsumerGroupOffsets(group)
+            val consumerGroupOffsets = adminClient.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
 
                 topicPartitionsOffsets?.forEach { topicPartition, offset ->
