@@ -29,7 +29,8 @@ spec:
   prometheus:
     enabled: true
     path: /metrics
-  secrets: true
+  vault:  
+    enabled: true
   env:
     - name: PROMETHEUS_NAMESPACE
       value: dp
