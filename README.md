@@ -10,7 +10,7 @@ kafka-offset-monitor will query kafka consumer offset for a group and calculate 
 
 Example output:
 
-```http request
+```markdown
 namespace_consumer_offset_lag{group_id="group-id",partition="0",topic="topic-name"}	0
 namespace_consumer_offset_lag{group_id="group-id",partition="1",topic="topic-name"}	0
 namespace_consumer_offset_lag{group_id="group-id",partition="2",topic="topic-name"}	0
@@ -19,7 +19,7 @@ namespace_consumer_offset_lag{group_id="group-id",partition="2",topic="topic-nam
 
 ## Config
 
-the app need current environment vars:
+the app need environment vars:
 
 `PROMETHEUS_NAMESPACE` -- namespace of the prometheus metric. eg   `PROMETHEUS_NAMESPACE=dp` --> `dp_consumer_offset_lag`
 
