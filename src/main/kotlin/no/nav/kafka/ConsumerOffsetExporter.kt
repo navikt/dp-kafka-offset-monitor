@@ -133,7 +133,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     private fun getLogEndOffset(topicPartition: TopicPartition): Long {
         consumer.assign(listOf(topicPartition))
         consumer.seekToEnd(listOf(topicPartition))
-        return consumer.position(topicPartition)
+        return consumer.position(topicPartition) - 1
     }
 
     private fun createNewConsumer(environment: Environment): KafkaConsumer<String, String> {
