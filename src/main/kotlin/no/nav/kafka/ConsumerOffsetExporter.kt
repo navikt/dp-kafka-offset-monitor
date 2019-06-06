@@ -54,13 +54,6 @@ class ConsumerOffsetExporter(environment: Environment) {
             LOGGER.info("done!")
         })
 
-        adminClient.listConsumerGroups().all().whenComplete { groups, t ->
-            LOGGER.info { "CONSUMER GROUPS $groups" }
-            t?.apply {
-                LOGGER.error(t) { "Failed to get groups" }
-            }
-        }
-
         LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
     }
 
