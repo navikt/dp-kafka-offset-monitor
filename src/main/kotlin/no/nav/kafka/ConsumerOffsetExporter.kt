@@ -75,7 +75,7 @@ class ConsumerOffsetExporter(environment: Environment) {
                     val lag = getLogEndOffset(topicPartition) - currentOffset
                     offsetLagGauge.labels(group, topicPartition.partition().toString(), topicPartition.topic())
                         .set(lag.toDouble())
-                    LOGGER.info("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset")
+                    LOGGER.info("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset for group: $group" )
                 }
                 throwable?.apply {
                     LOGGER.error(throwable) { "Failed to get offset data from consumer group $group" }
