@@ -55,14 +55,6 @@ class ConsumerOffsetExporter(environment: Environment) {
             consumer.close()
             LOGGER.info("done!")
         })
-
-        adminClient.listConsumerGroups().all().whenComplete { groups, t ->
-            LOGGER.info { "CONSUMER GROUPS $groups" }
-            t?.apply {
-                LOGGER.error(t) { "Failed to get  groups" }
-            }
-        }
-
         LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
     }
 
@@ -82,10 +74,11 @@ class ConsumerOffsetExporter(environment: Environment) {
 
                 topicPartitionsOffsets?.forEach { topicPartition, offset ->
                     val currentOffset = offset.offset()
-                    val lag = getLogEndOffset(topicPartition) - currentOffset
+                    val endOffset = getLogEndOffset(topicPartition)
+                    val lag = endOffset - currentOffset
                     offsetLagGauge.labels(group, topicPartition.partition().toString(), topicPartition.topic())
                         .set(lag.toDouble())
-                    LOGGER.info("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset")
+                    LOGGER.info("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset , end offset $endOffset for group: $group")
                 }
                 throwable?.apply {
                     LOGGER.error(throwable) { "Failed to get offset data from consumer group $group" }
@@ -148,7 +141,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     private fun getLogEndOffset(topicPartition: TopicPartition): Long {
         consumer.assign(listOf(topicPartition))
         consumer.seekToEnd(listOf(topicPartition))
-        return consumer.position(topicPartition)
+        return consumer.position(topicPartition) - 1
     }
 
     private fun createNewConsumer(environment: Environment): KafkaConsumer<String, String> {

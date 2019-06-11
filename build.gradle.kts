@@ -56,18 +56,18 @@ java {
 
 spotless {
     kotlin {
-        ktlint()
+        ktlint("0.31.0")
     }
     kotlinGradle {
         target("*.gradle.kts", "additionalScripts/*.gradle.kts")
-        ktlint()
+        ktlint("0.31.0")
     }
 }
 
 val ktlint by configurations.creating
 
 dependencies {
-    ktlint("com.github.shyiko:ktlint:0.29.0")
+    ktlint("com.github.shyiko:ktlint:0.31.0")
 }
 
 val klintIdea by tasks.creating(JavaExec::class) {
