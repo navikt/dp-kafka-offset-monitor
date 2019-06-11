@@ -15,6 +15,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
@@ -28,6 +29,7 @@ import java.util.Properties
 import java.util.Timer
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.concurrent.timer
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -55,7 +57,7 @@ class ConsumerOffsetExporter(environment: Environment) {
         })
 
         adminClient.listConsumerGroups().all().whenComplete { groups, t ->
-            LOGGER.info { "CONSUMER GROUPTS $groups" }
+            LOGGER.info { "CONSUMER GROUPS $groups" }
             t?.apply {
                 LOGGER.error(t) { "Failed to get  groups" }
             }
@@ -66,13 +68,14 @@ class ConsumerOffsetExporter(environment: Environment) {
 
     companion object {
         @JvmStatic
-        fun main(args: Array<String>) {
+        fun main(args: Array<String>) = runBlocking {
             val offsetExporter = ConsumerOffsetExporter(Environment())
             offsetExporter.start()
         }
     }
 
-    private fun kafkaOffsetScraper() {
+    fun kafkaOffsetScraper() {
+        LOGGER.info("Scraping consumer groups $consumerGroups")
         consumerGroups.split(",").forEach { group ->
             val consumerGroupOffsets = adminClient.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
@@ -94,15 +97,21 @@ class ConsumerOffsetExporter(environment: Environment) {
     private fun createAdminClient(environment: Environment): AdminClient {
         val props = Properties().apply {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.bootstrapServersUrl)
+            putAll(credentialProperties())
         }
-        props.putAll(credentialProperties())
         return AdminClient.create(props)
     }
 
-    fun start() {
+    suspend fun start() {
         LOGGER.info { "STARTING" }
-        val timer = Timer("offset-checker-task", true)
-        val timerTask = timer.scheduleAtFixedRate(TimeUnit.SECONDS.toMillis(5), TimeUnit.SECONDS.toMillis(10)) {
+
+        val timerTask = timer(
+            name = "offset-checker-task",
+            daemon = true,
+            initialDelay = TimeUnit.SECONDS.toMillis(5),
+            period = TimeUnit.SECONDS.toMillis(10)
+        ) {
+            LOGGER.info("Looping in timer task")
             kafkaOffsetScraper()
         }
 
@@ -126,7 +135,7 @@ class ConsumerOffsetExporter(environment: Environment) {
                     }
                 }
             }
-        }.start(wait = true)
+        }.start(wait = false)
 
         Runtime.getRuntime().addShutdownHook(Thread {
             app.stop(3, 5, TimeUnit.SECONDS)
@@ -143,18 +152,24 @@ class ConsumerOffsetExporter(environment: Environment) {
     }
 
     private fun createNewConsumer(environment: Environment): KafkaConsumer<String, String> {
-        val properties = Properties()
         val groupId = environment.namespace + "-offsetchecker"
-        properties[ConsumerConfig.GROUP_ID_CONFIG] = groupId
-        properties[ConsumerConfig.CLIENT_ID_CONFIG] = groupId
-        properties[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = environment.bootstrapServersUrl
-        properties[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
-        properties[ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG] = "30000"
-        properties[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] =
-            "org.apache.kafka.common.serialization.StringDeserializer"
-        properties[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] =
-            "org.apache.kafka.common.serialization.StringDeserializer"
-        properties.putAll(credentialProperties())
+
+        val properties = Properties().apply {
+            put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
+            put(ConsumerConfig.CLIENT_ID_CONFIG, groupId)
+            put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.bootstrapServersUrl)
+            put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
+            put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000")
+            put(
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer"
+            )
+            put(
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer"
+            )
+            putAll(credentialProperties())
+        }
         return KafkaConsumer(properties)
     }
 

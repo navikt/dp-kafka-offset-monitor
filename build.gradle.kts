@@ -2,8 +2,8 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("jvm") version "1.3.20"
-    id("com.diffplug.gradle.spotless") version "3.17.0"
+    kotlin("jvm") version "1.3.31"
+    id("com.diffplug.gradle.spotless") version "3.23.0"
     id("application")
     id("com.github.johnrengelman.shadow") version "4.0.3"
 }
@@ -13,7 +13,7 @@ val ktor_version = "1.1.2"
 val kotlin_logging_version = "1.4.9"
 val kafka_version = "2.0.1"
 val log4j2_version = "2.11.1"
-val junit = "5.3.2"
+val junit = "5.4.1"
 
 repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk8"))
     implementation("io.github.microutils:kotlin-logging:$kotlin_logging_version")
     implementation("org.apache.kafka:kafka-clients:$kafka_version")
 
