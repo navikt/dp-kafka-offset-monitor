@@ -16,13 +16,11 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import java.util.Properties
 
-@Disabled(" Need to figure out how to test this")
 class ConsumerOffsetExporterComponentTest {
 
     companion object {
@@ -62,20 +60,19 @@ class ConsumerOffsetExporterComponentTest {
     fun test() {
 
         KafkaProducer<String, String>(producerProps()).use { p ->
-            LOGGER.info("${p.send(ProducerRecord("test-topic1", "one", "one")).get()}")
-            LOGGER.info("${p.send(ProducerRecord("test-topic1", "two", "two")).get()}")
-            LOGGER.info("${p.send(ProducerRecord("test-topic1", "three", "three")).get()}")
-            LOGGER.info("${p.send(ProducerRecord("test-topic1", "four", "four")).get()}")
-            LOGGER.info("${p.send(ProducerRecord("test-topic1", "five", "five")).get()}")
+            p.send(ProducerRecord("test-topic1", "one", "one")).get()
+            p.send(ProducerRecord("test-topic1", "two", "two")).get()
+            p.send(ProducerRecord("test-topic1", "three", "three")).get()
+            p.send(ProducerRecord("test-topic1", "four", "four")).get()
+            p.send(ProducerRecord("test-topic1", "five", "five")).get()
         }
 
         val consumer = KafkaConsumer<String, String>(consumerProps())
         consumer.subscribe(listOf("test-topic1"))
-        for (i in 1 until 4) { // Read 3 messages
-            val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS))
-            records.forEach { LOGGER.info("$it") }
-            consumer.commitSync()
-        }
+        val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS))
+        records.forEach { LOGGER.info("$it") }
+        consumer.commitSync()
+
         val offsetExporter = ConsumerOffsetExporter(env)
         offsetExporter.kafkaOffsetScraper()
         Thread.sleep(200)
@@ -84,7 +81,11 @@ class ConsumerOffsetExporterComponentTest {
             arrayOf("group_id", "partition", "topic"),
             arrayOf("test-group1", "0", "test-topic1")
         )
-        assertEquals(2.0, lag)
+        assertEquals(3.0, lag)
+        /* Consumers offset er neste melding den skal lese, endOffset er siste melding som har blitt committed
+           Så etter 5 meldinger sendt så er endOffset == 4, og etter å ha lest en melding (max.poll.records i konfigurasjonen er satt til 1) så er consumer på offset 1
+           Ergo blir lag 3, selv som vi har 4 meldinger vi ikke har lest ennå
+         */
         consumer.close()
     }
 
