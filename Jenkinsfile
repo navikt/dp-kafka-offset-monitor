@@ -9,12 +9,6 @@ pipeline {
   }
 
   stages {
-    stage('Install dependencies') {
-      steps {
-        sh './gradlew assemble'
-      }
-    }
-
     stage('Build') {
       steps {
         sh './gradlew build'
@@ -28,7 +22,7 @@ pipeline {
             keepAll: true,
             reportDir: 'build/reports/tests/test',
             reportFiles: 'index.html',
-            reportName: 'Test coverage'
+            reportName: 'Test reports'
           ]
 
           junit 'build/test-results/test/*.xml'
@@ -78,7 +72,7 @@ pipeline {
 
       steps {
         sh label: 'Deploy to production', script: """
-          kubectl config use-context ${env.ZONE}
+          kubectl config use-context prod-${env.ZONE}
           kubectl apply -n ${env.NAMESPACE} -f nais-deployed.yaml --wait
           kubectl rollout status -w deployment/${APPLICATION_NAME}
         """
