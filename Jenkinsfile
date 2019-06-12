@@ -36,7 +36,7 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy to non-production') {
       when { branch 'master' }
 
       environment {
@@ -72,5 +72,19 @@ pipeline {
         }
       }
     }
+
+    stage("Deploy to production") {
+      when { branch 'master' }
+
+      steps {
+        sh label: 'Deploy to production', script: """
+          kubectl config use-context ${env.ZONE}
+          kubectl apply -n ${env.NAMESPACE} -f nais-deployed.yaml --wait
+          kubectl rollout status -w deployment/${APPLICATION_NAME}
+        """
+      }
+
+    }
+
   }
 }
