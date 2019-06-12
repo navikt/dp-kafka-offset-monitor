@@ -26,9 +26,7 @@ import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import java.io.File
 import java.util.Properties
-import java.util.Timer
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.concurrent.timer
 
 private val LOGGER = KotlinLogging.logger {}

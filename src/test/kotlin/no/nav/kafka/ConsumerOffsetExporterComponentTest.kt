@@ -1,10 +1,6 @@
 package no.nav.kafka
 
 import io.prometheus.client.CollectorRegistry
-import javafx.application.Application.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
@@ -15,7 +11,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.SaslConfigs
-import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.junit.jupiter.api.AfterAll
@@ -23,8 +18,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
-import java.io.File
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import java.util.Properties
@@ -80,7 +73,7 @@ class ConsumerOffsetExporterComponentTest {
         consumer.subscribe(listOf("test-topic1"))
         for (i in 1 until 4) { // Read 3 messages
             val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS))
-            records.forEach { LOGGER.info("${it}") }
+            records.forEach { LOGGER.info("$it") }
             consumer.commitSync()
         }
         val offsetExporter = ConsumerOffsetExporter(env)
