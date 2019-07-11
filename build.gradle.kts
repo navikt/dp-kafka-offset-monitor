@@ -2,46 +2,36 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("jvm") version "1.3.31"
-    id("com.diffplug.gradle.spotless") version "3.23.0"
-    id("application")
-    id("com.github.johnrengelman.shadow") version "4.0.3"
+    application
+    kotlin("jvm") version Kotlin.version
+    id(Spotless.spotless) version Spotless.version
+    id(Shadow.shadow) version Shadow.version
 }
 
-val prometheus_version = "0.6.0"
-val ktor_version = "1.1.2"
-val kotlin_logging_version = "1.4.9"
-val kafka_version = "2.0.1"
-val log4j2_version = "2.11.1"
-val junit = "5.4.1"
-
 repositories {
-    mavenCentral()
-    maven("https://dl.bintray.com/kotlin/ktor")
-    maven("https://dl.bintray.com/kotlin/kotlinx")
-    maven("https://dl.bintray.com/kittinunf/maven")
+    jcenter()
     maven("http://packages.confluent.io/maven/")
-    maven("https://dl.bintray.com/spekframework/spek-dev")
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("io.github.microutils:kotlin-logging:$kotlin_logging_version")
-    implementation("org.apache.kafka:kafka-clients:$kafka_version")
 
-    implementation("io.prometheus:simpleclient_common:$prometheus_version")
-    implementation("io.prometheus:simpleclient_hotspot:$prometheus_version")
+    implementation(Kafka.clients)
 
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-gson:$ktor_version")
+    implementation(Prometheus.common)
+    implementation(Prometheus.hotspot)
 
-    implementation("org.apache.logging.log4j:log4j-api:$log4j2_version")
-    implementation("org.apache.logging.log4j:log4j-core:$log4j2_version")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4j2_version")
+    implementation(Ktor.serverNetty)
+    implementation(Ktor.library("gson"))
 
-    testImplementation("no.nav:kafka-embedded-env:2.0.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit")
+    implementation(Kotlin.Logging.kotlinLogging)
+    implementation(Log4j2.api)
+    implementation(Log4j2.core)
+    implementation(Log4j2.slf4j)
+
+    testImplementation(KafkaEmbedded.env)
+    testImplementation(Junit5.api)
+    testRuntimeOnly(Junit5.engine)
 }
 
 application {
@@ -56,18 +46,18 @@ java {
 
 spotless {
     kotlin {
-        ktlint("0.31.0")
+        ktlint(Klint.version)
     }
     kotlinGradle {
         target("*.gradle.kts", "additionalScripts/*.gradle.kts")
-        ktlint("0.31.0")
+        ktlint(Klint.version)
     }
 }
 
 val ktlint by configurations.creating
 
 dependencies {
-    ktlint("com.github.shyiko:ktlint:0.31.0")
+    ktlint("com.github.shyiko:ktlint:${Klint.version}")
 }
 
 val klintIdea by tasks.creating(JavaExec::class) {
