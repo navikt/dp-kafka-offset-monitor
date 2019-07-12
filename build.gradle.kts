@@ -20,6 +20,7 @@ dependencies {
 
     implementation(Prometheus.common)
     implementation(Prometheus.hotspot)
+    implementation(Prometheus.log4j2)
 
     implementation(Ktor.serverNetty)
     implementation(Ktor.library("gson"))

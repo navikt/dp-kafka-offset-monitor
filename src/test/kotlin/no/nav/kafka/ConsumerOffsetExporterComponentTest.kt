@@ -69,7 +69,7 @@ class ConsumerOffsetExporterComponentTest {
 
         val consumer = KafkaConsumer<String, String>(consumerProps())
         consumer.subscribe(listOf("test-topic1"))
-        val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS))
+        val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS)) // (max.poll.records i konfigurasjonen er satt til 1)
         records.forEach { LOGGER.info("$it") }
         consumer.commitSync()
 
@@ -81,11 +81,7 @@ class ConsumerOffsetExporterComponentTest {
             arrayOf("group_id", "partition", "topic"),
             arrayOf("test-group1", "0", "test-topic1")
         )
-        assertEquals(3.0, lag)
-        /* Consumers offset er neste melding den skal lese, endOffset er siste melding som har blitt committed
-           Så etter 5 meldinger sendt så er endOffset == 4, og etter å ha lest en melding (max.poll.records i konfigurasjonen er satt til 1) så er consumer på offset 1
-           Ergo blir lag 3, selv som vi har 4 meldinger vi ikke har lest ennå
-         */
+        assertEquals(4.0, lag)
         consumer.close()
     }
 
