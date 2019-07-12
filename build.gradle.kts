@@ -76,3 +76,7 @@ tasks.withType<Test> {
         events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
     }
 }
+
+tasks.withType<Wrapper> {
+    gradleVersion = "5.5"
+}
