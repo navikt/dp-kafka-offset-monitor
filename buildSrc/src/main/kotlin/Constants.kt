@@ -28,14 +28,14 @@ object Cucumber {
 object Dagpenger {
 
     object Biblioteker {
-        const val version = "2019.07.11-08.55.1495a84dbbd4"
+        const val version = "2019.08.06-10.38.37f08827d066"
         const val stsKlient = "com.github.navikt.dp-biblioteker:sts-klient:$version"
         const val grunnbeløp = "com.github.navikt.dp-biblioteker:grunnbelop:$version"
         const val ktorUtils = "com.github.navikt.dp-biblioteker:ktor-utils:$version"
     }
 
-    const val Streams = "com.github.navikt:dagpenger-streams:2019.07.11-11.18.8dc134276bc5"
-    const val Events = "com.github.navikt:dagpenger-events:2019.07.11-11.07.e2ca2d968ff6"
+    const val Streams = "com.github.navikt:dagpenger-streams:2019.08.06-10.54.063ebf321402"
+    const val Events = "com.github.navikt:dagpenger-events:2019.08.06-10.38.92d9930cd257"
 }
 
 object Database {
@@ -117,7 +117,7 @@ object Kotlinx {
 }
 
 object Ktor {
-    const val version = "1.2.1"
+    const val version = "1.2.3"
     const val server = "io.ktor:ktor-server:$version"
     const val serverNetty = "io.ktor:ktor-server-netty:$version"
     const val auth = "io.ktor:ktor-auth:$version"
@@ -129,7 +129,7 @@ object Ktor {
 }
 
 object Log4j2 {
-    private const val version = "2.12.0"
+    const val version = "2.12.0"
     const val api = "org.apache.logging.log4j:log4j-api:$version"
     const val core = "org.apache.logging.log4j:log4j-core:$version"
     const val slf4j = "org.apache.logging.log4j:log4j-slf4j-impl:$version"
