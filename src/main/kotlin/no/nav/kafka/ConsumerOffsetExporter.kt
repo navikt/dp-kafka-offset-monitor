@@ -101,7 +101,7 @@ class ConsumerOffsetExporter(environment: Environment) {
             initialDelay = TimeUnit.SECONDS.toMillis(5),
             period = TimeUnit.SECONDS.toMillis(10)
         ) {
-            LOGGER.debug ("Looping in timer task")
+            LOGGER.debug("Looping in timer task")
             kafkaOffsetScraper()
         }
 
