@@ -10,10 +10,7 @@
         <Prometheus name="metrics"/>
     </Appenders>
     <Loggers>
-        <Logger name="io.ktor.auth.jwt" level="trace">
-            <AppenderRef ref="ConsoleAppender"/>
-        </Logger>
-        <Root level="info">
+        <Root level="warn">
             <AppenderRef ref="ConsoleAppender"/>
             <AppenderRef ref="metrics"/>
         </Root>

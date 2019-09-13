@@ -65,7 +65,6 @@ class ConsumerOffsetExporter(environment: Environment) {
     }
 
     fun kafkaOffsetScraper() {
-        LOGGER.info("Scraping consumer groups $consumerGroups")
         consumerGroups.split(",").forEach { group ->
             val consumerGroupOffsets = adminClient.listConsumerGroupOffsets(group)
             consumerGroupOffsets.partitionsToOffsetAndMetadata().whenComplete { topicPartitionsOffsets, throwable ->
@@ -102,7 +101,7 @@ class ConsumerOffsetExporter(environment: Environment) {
             initialDelay = TimeUnit.SECONDS.toMillis(5),
             period = TimeUnit.SECONDS.toMillis(10)
         ) {
-            LOGGER.info("Looping in timer task")
+            LOGGER.debug ("Looping in timer task")
             kafkaOffsetScraper()
         }
 
