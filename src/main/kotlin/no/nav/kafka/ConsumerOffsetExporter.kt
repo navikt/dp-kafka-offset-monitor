@@ -29,7 +29,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
 
-private val LOGGER = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 class ConsumerOffsetExporter(environment: Environment) {
     private val collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
@@ -49,11 +49,11 @@ class ConsumerOffsetExporter(environment: Environment) {
     init {
         DefaultExports.initialize()
         Runtime.getRuntime().addShutdownHook(Thread {
-            LOGGER.info("Closing the application...")
+            logger.info("Closing the application...")
             consumer.close()
-            LOGGER.info("done!")
+            logger.info("done!")
         })
-        LOGGER.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
+        logger.info("Monitoring consumer group(s) ${consumerGroups.split(",").joinToString { "\"$it\"\n" }}")
     }
 
     companion object {
@@ -75,10 +75,10 @@ class ConsumerOffsetExporter(environment: Environment) {
                     val lag = endOffset - currentOffset
                     offsetLagGauge.labels(group, topicPartition.partition().toString(), topicPartition.topic())
                         .set(lag.toDouble())
-                    LOGGER.debug("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset , end offset $endOffset for group: $group")
+                    logger.debug("Lag is -> $lag for topic '${topicPartition.topic()}', partition ${topicPartition.partition()}, current offset $currentOffset , end offset $endOffset for group: $group")
                 }
                 throwable?.apply {
-                    LOGGER.error(throwable) { "Failed to get offset data from consumer group $group" }
+                    logger.warn(throwable) { "Failed to get offset data from consumer group $group" }
                 }
             }
         }
@@ -93,7 +93,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     }
 
     suspend fun start() {
-        LOGGER.info { "STARTING" }
+        logger.info { "STARTING" }
 
         val timerTask = timer(
             name = "offset-checker-task",
@@ -101,7 +101,7 @@ class ConsumerOffsetExporter(environment: Environment) {
             initialDelay = TimeUnit.SECONDS.toMillis(5),
             period = TimeUnit.SECONDS.toMillis(10)
         ) {
-            LOGGER.debug("Looping in timer task")
+            logger.debug("Looping in timer task")
             kafkaOffsetScraper()
         }
 
@@ -166,7 +166,7 @@ class ConsumerOffsetExporter(environment: Environment) {
     private fun credentialProperties(): Properties {
         return Properties().apply {
             kafkaCredential.let { credential ->
-                LOGGER.info { "Using user name ${credential.username} to authenticate against Kafka brokers " }
+                logger.info { "Using user name ${credential.username} to authenticate against Kafka brokers " }
                 put(SaslConfigs.SASL_MECHANISM, "PLAIN")
                 put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
                 put(
@@ -180,9 +180,9 @@ class ConsumerOffsetExporter(environment: Environment) {
                         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL")
                         put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, File(it).absolutePath)
                         put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, System.getenv("NAV_TRUSTSTORE_PASSWORD"))
-                        LOGGER.info { "Configured '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
+                        logger.info { "Configured '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
                     } catch (e: Exception) {
-                        LOGGER.error { "Failed to set '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
+                        logger.error { "Failed to set '${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG}' location " }
                     }
                 }
             }
