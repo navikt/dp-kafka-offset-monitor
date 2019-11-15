@@ -27,12 +27,13 @@ class ConsumerOffsetExporterComponentTest {
         private const val username = "srvkafkaclient"
         private const val password = "kafkaclient"
         val LOGGER = KotlinLogging.logger {}
-        val embeddedEnvironment = KafkaEnvironment(
+        const val topicName = "test-topic-1"
+        private val embeddedEnvironment = KafkaEnvironment(
             users = listOf(JAASCredential(username, password)),
             autoStart = false,
             withSchemaRegistry = false,
             withSecurity = true,
-            topics = listOf("test-topic1")
+            topicInfos = listOf(KafkaEnvironment.TopicInfo(name = topicName, partitions = 1))
         )
 
         val env = Environment(
@@ -60,26 +61,26 @@ class ConsumerOffsetExporterComponentTest {
     fun test() {
 
         KafkaProducer<String, String>(producerProps()).use { p ->
-            p.send(ProducerRecord("test-topic1", "one", "one")).get()
-            p.send(ProducerRecord("test-topic1", "two", "two")).get()
-            p.send(ProducerRecord("test-topic1", "three", "three")).get()
-            p.send(ProducerRecord("test-topic1", "four", "four")).get()
-            p.send(ProducerRecord("test-topic1", "five", "five")).get()
+            p.send(ProducerRecord(topicName, "one", "one")).get()
+            p.send(ProducerRecord(topicName, "two", "two")).get()
+            p.send(ProducerRecord(topicName, "three", "three")).get()
+            p.send(ProducerRecord(topicName, "four", "four")).get()
+            p.send(ProducerRecord(topicName, "five", "five")).get()
         }
 
         val consumer = KafkaConsumer<String, String>(consumerProps())
-        consumer.subscribe(listOf("test-topic1"))
+        consumer.subscribe(listOf(topicName))
         val records = consumer.poll(Duration.of(5, ChronoUnit.SECONDS)) // (max.poll.records i konfigurasjonen er satt til 1)
         records.forEach { LOGGER.info("$it") }
         consumer.commitSync()
 
         val offsetExporter = ConsumerOffsetExporter(env)
         offsetExporter.kafkaOffsetScraper()
-        Thread.sleep(200)
+        Thread.sleep(2000)
         val lag = CollectorRegistry.defaultRegistry.getSampleValue(
             "dagpenger_consumer_offset_lag",
             arrayOf("group_id", "partition", "topic"),
-            arrayOf("test-group1", "0", "test-topic1")
+            arrayOf("test-group1", "0", topicName)
         )
         assertEquals(4.0, lag)
         consumer.close()

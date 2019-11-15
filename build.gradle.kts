@@ -46,6 +46,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+configurations.all {
+    resolutionStrategy.activateDependencyLocking()
+    resolutionStrategy.preferProjectModules()
+    resolutionStrategy.eachDependency { DependencyResolver.execute(this) }
+}
+
 spotless {
     kotlin {
         ktlint(Klint.version)
