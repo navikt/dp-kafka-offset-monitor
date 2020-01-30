@@ -9,7 +9,7 @@ metadata:
   annotations:
     zone: fss
 spec:
-  image: repo.adeo.no:5443/dp-kafka-offset-monitor:latest
+  image: {{ image }}
   port: 8080
   team: teamdagpenger
   liveness:
