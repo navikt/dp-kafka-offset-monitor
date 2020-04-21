@@ -15,6 +15,10 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
+import java.io.File
+import java.util.Properties
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.timer
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.kafka.clients.CommonClientConfigs
@@ -24,10 +28,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
-import java.io.File
-import java.util.Properties
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.timer
 
 private val logger = KotlinLogging.logger {}
 

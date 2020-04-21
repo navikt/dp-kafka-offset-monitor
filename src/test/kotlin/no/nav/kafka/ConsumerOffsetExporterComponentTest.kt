@@ -1,6 +1,9 @@
 package no.nav.kafka
 
 import io.prometheus.client.CollectorRegistry
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import java.util.Properties
 import mu.KotlinLogging
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
@@ -17,9 +20,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-import java.util.Properties
 
 class ConsumerOffsetExporterComponentTest {
 
