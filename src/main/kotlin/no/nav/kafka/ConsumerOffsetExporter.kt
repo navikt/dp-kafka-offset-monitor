@@ -128,7 +128,7 @@ class ConsumerOffsetExporter(environment: Environment) {
         }.start(wait = false)
 
         Runtime.getRuntime().addShutdownHook(Thread {
-            app.stop(3, 5, TimeUnit.SECONDS)
+            app.stop(3000, 5000)
         })
         Runtime.getRuntime().addShutdownHook(Thread {
             timerTask.cancel()
