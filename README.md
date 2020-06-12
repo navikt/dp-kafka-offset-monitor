@@ -1,3 +1,8 @@
+# INACTIVE - Functionality replaced by https://github.com/lightbend/kafka-lag-exporter 
+
+
+
+
 ![Build and deploy](https://github.com/navikt/dp-kafka-offset-monitor/workflows/Build%20and%20deploy/badge.svg)
 
 # kafka-offset-monitor
